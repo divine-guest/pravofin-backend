@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import httpx
 import uvicorn
 import os
+import json
 from typing import Optional
 
 app = FastAPI(title="ПравоФин API", version="1.0")
@@ -17,10 +18,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === ТВОИ ДАННЫЕ YANDEX ===
-# Вставь свои данные сюда или используй переменные окружения (рекомендую)
+# === ТВОИ ДАННЫЕ YANDEX (можно хранить в переменных окружения) ===
+# Если хочешь хранить в коде — вставь сюда:
 FOLDER_ID = "b1gr9700dkd6c3qr8cte"
 API_KEY = "aje1tflhh48g4v3r58j9"
+
+# Если хочешь хранить в переменных окружения (безопаснее) — раскомментируй строки ниже и закомментируй строки выше:
+# FOLDER_ID = os.getenv("FOLDER_ID")
+# API_KEY = os.getenv("API_KEY")
+# if not FOLDER_ID or not API_KEY:
+#     raise ValueError("Не заданы FOLDER_ID или API_KEY в переменных окружения!")
 
 YANDEX_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 
@@ -128,11 +135,9 @@ async def tax_helper(req: TaxRequest):
     # Сначала считаем базовые цифры
     usn1 = req.income * 0.06
     usn2 = (req.income - req.expenses) * 0.15
-    
     if req.expenses >= req.income:
         usn2 = 0
     
-    # Формируем промпт для AI
     prompt = f"""
 Доход: {req.income} ₽
 Расходы: {req.expenses} ₽
@@ -147,7 +152,6 @@ async def tax_helper(req: TaxRequest):
     
     advice = await call_yandex_gpt(prompt, "Ты — налоговый консультант. Даёшь чёткие рекомендации.")
     
-    # Добавляем расчёты к ответу AI
     return {
         "tax_advice": f"""
 📊 Налоговый расчёт
@@ -179,4 +183,5 @@ async def generate_checklist(req: ChecklistRequest):
 
 # === ЗАПУСК ===
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
