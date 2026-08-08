@@ -2,4 +2,4 @@ fastapi
 uvicorn
 pydantic
 httpx
-python-multipart
+python-version = 3.12
