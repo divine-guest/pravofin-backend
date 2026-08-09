@@ -18,16 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === ТВОИ ДАННЫЕ YANDEX (можно хранить в переменных окружения) ===
-# Если хочешь хранить в коде — вставь сюда:
+# === ТВОИ ДАННЫЕ ДЛЯ YANDEXGPT (вставлены прямо в код) ===
 FOLDER_ID = "b1gr9700dkd6c3qr8cte"
 API_KEY = "aje1tflhh48g4v3r58j9"
-
-# Если хочешь хранить в переменных окружения (безопаснее) — раскомментируй строки ниже и закомментируй строки выше:
-# FOLDER_ID = os.getenv("FOLDER_ID")
-# API_KEY = os.getenv("API_KEY")
-# if not FOLDER_ID or not API_KEY:
-#     raise ValueError("Не заданы FOLDER_ID или API_KEY в переменных окружения!")
 
 YANDEX_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 
