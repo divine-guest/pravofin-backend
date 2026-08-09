@@ -7,7 +7,7 @@ import os
 
 app = FastAPI(title="ПравоФин API", version="1.0")
 
-# === РАЗРЕШАЕМ ЗАПРОСЫ С ЛЮБОГО САЙТА (ЭТО ВАЖНО!) ===
+# === РАЗРЕШАЕМ ЗАПРОСЫ С ЛЮБОГО САЙТА ===
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,19 +16,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === ТВОИ ДАННЫЕ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ===
-FOLDER_ID = os.getenv("FOLDER_ID")
-API_KEY = os.getenv("API_KEY")
-
-# Если переменные не заданы — используем значения напрямую (на всякий случай)
-if not FOLDER_ID:
-    FOLDER_ID = "b1gr9700dkd6c3qr8cte"
-if not API_KEY:
-    API_KEY = "aje1tflhh48g4v3r58j9"
+# === ТВОИ ДАННЫЕ ===
+FOLDER_ID = "b1gr9700dkd6c3qr8cte"
+API_KEY = "aje1tflhh48g4v3r58j9"
 
 YANDEX_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 
-# === МОДЕЛИ ===
+# === МОДЕЛЬ ===
 class DocRequest(BaseModel):
     docType: str
     party1: str
@@ -41,11 +35,10 @@ class DocRequest(BaseModel):
 def root():
     return {"message": "ПравоФин API работает", "status": "ok"}
 
-# === ГЕНЕРАЦИЯ ДОКУМЕНТА (БЕЗ АВТОРИЗАЦИИ) ===
+# === ГЕНЕРАЦИЯ ДОКУМЕНТА ===
 @app.post("/generate")
 async def generate_document(req: DocRequest):
     try:
-        # Формируем промпт
         prompt = f"""
 Тип документа: {req.docType}
 Сторона 1: {req.party1}
@@ -57,13 +50,11 @@ async def generate_document(req: DocRequest):
 Используй официально-деловой стиль.
 """
         
-        # Заголовки для YandexGPT
         headers = {
             "Authorization": f"Api-Key {API_KEY}",
             "Content-Type": "application/json"
         }
 
-        # Тело запроса
         payload = {
             "modelUri": f"gpt://{FOLDER_ID}/yandexgpt-lite",
             "completionOptions": {
@@ -77,13 +68,11 @@ async def generate_document(req: DocRequest):
             ]
         }
 
-        # Отправляем запрос
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(YANDEX_URL, json=payload, headers=headers)
             response.raise_for_status()
             result = response.json()
 
-        # Извлекаем текст
         document = result.get("result", {}).get("alternatives", [{}])[0].get("message", {}).get("text", "Документ не сгенерирован")
 
         return {"document": document}
